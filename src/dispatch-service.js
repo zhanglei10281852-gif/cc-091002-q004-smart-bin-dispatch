@@ -1,0 +1,2 @@
+import { thresholds } from './domain.js';
+export class DispatchService { constructor(store){this.store=store;} ingest(reading){this.store.append(reading);if(reading.fillPercent>=thresholds.high){const task={id:`${reading.deviceId}-${reading.deviceSeq}`,deviceId:reading.deviceId,state:'open'};this.store.addTask(task);return {decision:'adopted',task};}if(reading.fillPercent<thresholds.high){for(const task of this.store.openTasks(reading.deviceId)) task.state='cancelled';}return {decision:'adopted'};} }

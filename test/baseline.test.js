@@ -1,0 +1,2 @@
+import test from 'node:test'; import assert from 'node:assert/strict'; import { readFile } from 'node:fs/promises'; import { TelemetryStore } from '../src/telemetry-store.js'; import { DispatchService } from '../src/dispatch-service.js';
+test('高液位读数生成清运任务',async()=>{const reading=JSON.parse(await readFile(new URL('../fixtures/device-session.json',import.meta.url)));const store=new TelemetryStore();const result=new DispatchService(store).ingest(reading);assert.equal(result.decision,'adopted');assert.equal(store.openTasks('BIN-88').length,1);});

@@ -1,0 +1,1 @@
+export class TelemetryStore { readings=[]; tasks=[]; append(reading){this.readings.push(structuredClone(reading));} addTask(task){this.tasks.push(structuredClone(task));} openTasks(deviceId){return this.tasks.filter(x=>x.deviceId===deviceId&&x.state==='open');} }
