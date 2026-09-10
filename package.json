@@ -1,0 +1,1 @@
+{"name":"smart-recycling-bin-dispatch","version":"0.7.0","private":true,"type":"module","scripts":{"test":"node --test"},"engines":{"node":">=20"},"description":"智能回收箱遥测调度服务"}
