@@ -2,4 +2,12 @@
 
 服务接收回收箱遥测数据并在达到清运条件时生成调度任务。设备通过会话与递增序号标识采样顺序，原始遥测长期保留；任务可由调度员锁定、车辆接受并最终完成。
 
-阈值约定保存在 `fixtures/device-session.json`，`src/telemetry-store.js` 保存读数，`src/dispatch-service.js` 维护清运任务。使用 Node.js 20 或更高版本并运行 `npm test` 可检查正常高液位触发流程。
+阈值约定保存在 `fixtures/device-session.json`，`src/telemetry-store.js` 保存读数，`src/dispatch-service.js` 维护清运任务。使用 Node.js 20 或更高版本并运行 `npm test` 可检查正常高液位触发流程及乱序、重放、离线恢复等一致性场景。
+
+## 一致性规则
+
+- **读数接纳**：同一会话内 `deviceSeq` 必须单调递增。重放记为 `duplicate`、乱序迟到记为 `stale`，两者只入审计，不改变当前液位；设备重置序号必须先 `registerSession` 登记会话切换，否则记为 `invalid-session`。
+- **失联窗口**：到达时间与采样时间之差超过 `offlineWindowMs`（默认 15 分钟）记为 `expired`，离线积压样本不更新液位、不触发告警，恢复后以新鲜样本为准。
+- **阈值判断**：液位上穿高阈值（80%）才派单，回落至低阈值（35%）前不重复派单（迟滞）；只有低于低阈值才关闭未锁定、未接受的开放任务，每台设备至多一张在途任务。
+- **任务生命周期**：车辆已接受（`accepted`）或调度员锁定（`lockTask`）的任务不被低读数取消；`completeTask` 只能作用于已接受任务。
+- **审计与查询**：全部原始遥测（含被拒绝的读数）保留于 `store.readings`；`explainDevice(deviceId)` 返回每个读数被采用或忽略的理由，以及每张任务保持、关闭或重新开放的状态变迁历史。
